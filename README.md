@@ -31,7 +31,7 @@ I transformed a 15,000-row Sales CSV from a messy flat file into a structured Hy
 - Historical Dimension (SCD2): Tracks dynamic attributes such as Email, Region, and Country.
 
 A significant engineering challenge was that the Sales CSV only contained ISO country codes (e.g., 'NGA'), while the Wikipedia GDP data used full country names. To bridge this gap, I used a JSON dataset as a transient lookup layer during the ETL process. By joining this JSON data while building the Customer History table, I persisted the full country names directly into the records. This then glued the sales ecosystem to the GDP data, using the history table as the functional bridge.
-![image description](https://github.com/user/repo/assets/12345/abc-123)
+![image description](https://github.com/kelechiogbogu/ETL-Data-Warehousing-Project-Global-GDP-and-Sales-Analysis/blob/main/DataModel_Hybrid.png)
 
 ### The Gold Layer: Engineering Business Value
 The "Gold" layer is where I applied custom business logic to turn raw data into meaningful insights. I developed a series of SQL Views that hide the underlying engineering complexity (like the SCD2 flags) and calculate key metrics on the fly:
