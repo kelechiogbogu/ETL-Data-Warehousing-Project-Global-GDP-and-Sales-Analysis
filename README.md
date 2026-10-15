@@ -19,16 +19,17 @@ The tools used for this project are:
 - Docker
 - Apache Airflow
 
-## Project Summary: Multi-Source ETL & Hybrid Relational Modelling
+## Project Summary: Multi-Source ETL & Data Modelling
 ### Automated Ingestion & Historisation (The Wikipedia Pipeline)
 For the GDP data, I used Python to scrape Wikipedia, carrying out initial cleaning before transferring the results to SQL Server. To make this production-ready, I Dockerised this specific workflow and utilised Apache Airflow for orchestration. I implemented SCD Type 2 (Slowly Changing Dimension) logic here, ensuring the database maintains a full historical trail of GDP changes over time rather than just a current snapshot.
 
-### The Hybrid Star Schema & The JSON Bridge
-I transformed a 15,000-row Sales CSV from a messy flat file into a structured Hybrid Star Schema. I deliberately separated the customer data into two layers to handle different velocities of change:
+### Snowflake Schema & The JSON Bridge
+I transformed a 15,000-row Sales CSV from a messy flat file into a structured dimensional model in the Silver layer. The model is a star schema with one deliberately snowflaked branch: the central `fact_sales` table connects directly to a flat `dim_products` dimension and to `dim_customers`, while customer data is normalized into two tables to handle different velocities of change:
 
-- Static Dimension: Stores immutable data like Date of Birth and Gender.
+- **Static Dimension (`dim_customers`):** Stores immutable data like Date of Birth and Gender, and joins directly to the fact table.
+- **Historical Dimension (`dim_customers_history`, SCD2):** Tracks dynamic attributes such as Email, Region, and Country. It hangs off `dim_customers`, one level out from the fact table, which is what makes this a snowflake design.
 
-- Historical Dimension (SCD2): Tracks dynamic attributes such as Email, Region, and Country.
+Separating the two avoids repeating static attributes on every SCD2 version row and keeps the main customer dimension compact. The trade-off is an extra join when analysing sales against historical customer attributes.
 
 A significant engineering challenge was that the Sales CSV only contained ISO country codes (e.g., 'NGA'), while the Wikipedia GDP data used full country names. To bridge this gap, I used a JSON dataset as a transient lookup layer during the ETL process. By joining this JSON data while building the Customer History table, I persisted the full country names directly into the records. This then glued the sales ecosystem to the GDP data, using the history table as the functional bridge.
 ![image description](https://github.com/kelechiogbogu/ETL-Data-Warehousing-Project-Global-GDP-and-Sales-Analysis/blob/main/DataModel_Hybrid.png)
